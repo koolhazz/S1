@@ -8,7 +8,9 @@ redis_t	g_redis;
 static void
 loop(redis_t* r)
 {
-	
+	while(FCGI_Accept() >= 0) {
+		printf("hello");	
+	}
 }
 
 static int
