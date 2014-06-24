@@ -7,5 +7,5 @@
 int
 json_handler(const char* json)
 {
-
+	return 0;
 }
