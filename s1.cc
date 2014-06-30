@@ -1,11 +1,12 @@
 #include "fcgi_stdio.h"
+#include "redis.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 
-//redis_t	g_redis;
+redis_t	g_redis;
 
 static char*
 __getParam(const char* qs, char** stop)
@@ -40,6 +41,7 @@ loop()
 	while(FCGI_Accept() >= 0) {
 		printf("Content-type: text/html\r\n\r\n"); //这里必须添加否则会报502的错误
 		printf("this is s1\n");
+		printf("CT: %s\n", getenv("REQUEST_METHOD"));
 		start = getenv("QUERY_STRING");
 		end = start + strlen(getenv("QUERY_STRING")) + 1;
 
@@ -53,6 +55,9 @@ loop()
 
 			start = stop;
 			pm = stop = NULL;
+			
+			g_redis.Enqueue("s1", value);
+			
 			memset(value, 0, strlen(value));
 		}
 	}
@@ -61,18 +66,20 @@ loop()
 static int
 redis_init()
 {
-	return 0;
+	if (g_redis.Connect("192.168.100.167", 4502, 5) == 0) {
+		return 0;
+	}
+	
+	return -1;
 }
-
-// 动态内存分配，需要调用者进行释放
 
 
 int
 main(int argc, char* argv[])
 {
-	if (redis_init()) {
+	if (redis_init() == -1) {
 		perror(NULL);
-		exit(0);
+		exit(-1);
 	}
 	
 	loop();
